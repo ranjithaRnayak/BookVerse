@@ -40,7 +40,7 @@ public class BooksController : ControllerBase
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetBooks), new { id = book.Id }, book);
     }
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin, Intern")]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateBook(Guid id, [FromBody] BookDto bookDto)
     {

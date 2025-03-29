@@ -5,6 +5,8 @@ using System.Security.Claims;
 using System.Text;
 using BookVerseApp.Application.DTOs;
 using BookVerseApp.Domain.Entities;
+using BookVerseApp.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookVerseApp.Api.Controllers;
 
@@ -13,16 +15,41 @@ namespace BookVerseApp.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IConfiguration _config;
+    private readonly AppDbContext _context;
+   // private readonly IMapper _mapper;
 
-    public AuthController(IConfiguration config)
+
+    public AuthController(IConfiguration config, AppDbContext appDbContext)
     {
         _config = config;
+        _context = appDbContext;
+    }
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] UserRegisterDto registerDto)
+    {
+        var existingUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Username == registerDto.Username);
+
+        if (existingUser != null)
+            return BadRequest("User already exists");
+
+        var user = new User
+        {
+            Username = registerDto.Username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
+            Role = registerDto.Role
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        return Ok("User registered successfully");
     }
 
     [HttpPost("login")]
-    public IActionResult Login([FromBody] UserLoginDto loginDto)
+   public async Task<IActionResult> Login([FromBody] UserLoginDto loginDto)
     {
-        var user = Authenticate(loginDto);
+        var user = await Authenticate(loginDto);
 
         if (user == null)
             return Unauthorized();
@@ -31,18 +58,14 @@ public class AuthController : ControllerBase
         return Ok(new { token });
     }
 
-    private User Authenticate(UserLoginDto login)
-    {
-        // 🔐 Simulate a user check (in real apps, use DB)
-        if (login.Username == "admin" && login.Password == "admin123")
-            return new User { Username = "admin", Role = "Admin" };
+   private async Task<User?> Authenticate(UserLoginDto login)
+{
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == login.Username);
+    
+    if (user is null) return null;
 
-        if (login.Username == "user" && login.Password == "user123")
-            return new User { Username = "user", Role = "User" };
-
-        throw new UnauthorizedAccessException("Invalid credentials");
-    }
-
+    return BCrypt.Net.BCrypt.Verify(login.Password, user.PasswordHash) ? user : null;
+}
     private string GenerateJwtToken(User user)
     {
         var jwtKey = _config["JwtSettings:Key"] ?? throw new InvalidOperationException("Missing JWT key");

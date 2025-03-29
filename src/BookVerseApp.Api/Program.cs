@@ -111,6 +111,12 @@ app.MapGet("/weatherforecast", () =>
 
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var seeder = new DataSeeder(db);
+    await seeder.SeedAsync();
+}
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
