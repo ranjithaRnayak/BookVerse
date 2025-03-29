@@ -11,13 +11,14 @@ namespace BookVerseApp.Api;
 public class BooksController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IMapper _mapper;
 
-    public BooksController(AppDbContext context)
+    public BooksController(AppDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
-[HttpGet("test")]
-public string Test() => "BookVerse is working!";
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
     {
@@ -32,4 +33,39 @@ public string Test() => "BookVerse is working!";
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetBooks), new { id = book.Id }, book);
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateBook(Guid id, [FromBody] BookDto bookDto)
+    {
+        var existingBook = await _context.Books.FindAsync(id);
+        if (existingBook == null)
+            return NotFound();
+
+        _mapper.Map(bookDto, existingBook); // maps updated fields into existing entity
+
+        await _context.SaveChangesAsync();
+        return NoContent(); // Standard REST response for update
+    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteBook(Guid id)
+    {
+        var book = await _context.Books.FindAsync(id);
+        if (book == null)
+            return NotFound();
+
+        _context.Books.Remove(book);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBooks([FromBody] List<BookDto> books)
+    {
+        var bookEntities = _mapper.Map<List<Book>>(books);
+        _context.Books.AddRange(bookEntities);
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+
 }
