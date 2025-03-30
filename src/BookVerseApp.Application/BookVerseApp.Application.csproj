@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BookVerseApp.Domain\BookVerseApp.Domain.csproj" />
+    <ProjectReference Include="..\BookVerseApp.Infrastructure\BookVerseApp.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

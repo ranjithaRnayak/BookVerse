@@ -7,6 +7,8 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using BookVerseApp.Api.Middleware;
 using System.Security.Claims;
+using BookVerseApp.Application.Services;
+using BookVerseApp.Application.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -47,6 +49,7 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddAutoMapper(typeof(BookProfile).Assembly);
+builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
