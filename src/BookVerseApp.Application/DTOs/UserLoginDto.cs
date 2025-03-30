@@ -1,4 +1,3 @@
-
 namespace BookVerseApp.Application.DTOs;
 
 public class UserLoginDto : UserAuthBaseDto
