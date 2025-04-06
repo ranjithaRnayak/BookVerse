@@ -87,14 +87,5 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
-    [Authorize]
-    [HttpGet("whoami")]
-    public IActionResult WhoAmI()
-    {
-        return Ok(new
-        {
-            Username = User.Identity?.Name,
-            Role = User.FindFirst(ClaimTypes.Role)?.Value
-        });
-    }
+   
 }

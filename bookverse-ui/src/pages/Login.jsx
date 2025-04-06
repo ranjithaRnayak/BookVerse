@@ -14,10 +14,12 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/Auth/login', { username, password });
+      const response = await axios.post('/Auth/login', { username, password });
       const token = response?.data?.data;
       if (token) {
         localStorage.setItem('token', token);
+        localStorage.setItem('username', username); // 👈 Store username
+
         navigate('/books'); // ✅ Navigate after successful login
       } else {
         setError('Invalid username or password');
